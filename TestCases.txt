@@ -1,0 +1,5 @@
+Pairwise("ABABABAB");
+Pairwise("AAAAAAAA");
+Pairwise("BABBYYAYAAB");
+Pairwise("XYABXYXYAB");
+Pairwise("AXXBXYABXAYB");
