@@ -1,4 +1,7 @@
+//#region Helpers
 function getAllNumbersBetween(x, y) {
+  // Should be a better way of doing this like range() in python
+  // Don't have time to check
   var numbers = [];
   for (var i = x; i <= y; i++) {
     numbers.push(i);
@@ -6,7 +9,7 @@ function getAllNumbersBetween(x, y) {
   return numbers;
 }
 
-function addPairToStore(
+function addPairToStoreWithLeftToRightCoordinates(
   inputString,
   letter1,
   letter2,
@@ -14,14 +17,26 @@ function addPairToStore(
   index2,
   pairStore
 ) {
+  // Find pair and add to store in X <= Y order.
   if (inputString[index1] === letter1 && inputString[index2] === letter2) {
     const pairStoreValue =
       index1 > index2 ? [index2, index1] : [index1, index2];
-    console.log(`Has pair at ${pairStoreValue[0]}, ${pairStoreValue[1]}`);
-
     pairStore.push(pairStoreValue);
   }
   return pairStore;
+}
+
+function findMiddleIndexesAndUpdateRunningPairList(
+  middleNumbers,
+  blockedIndexes,
+  runningPairList,
+  pair
+) {
+  middleNumbers.forEach((blockingIndex) => {
+    blockedIndexes.push(blockingIndex);
+  });
+  runningPairList.push(pair);
+  return { blockedIndexes, runningPairList };
 }
 
 function reduceToNonConflictingPairs(pairStore) {
@@ -32,21 +47,35 @@ function reduceToNonConflictingPairs(pairStore) {
   for (let i = 0; i < pairStore.length - 1; i++) {
     blockedIndexes = [];
     runningPairList = [];
-    for (let j = 0; j < pairStore.length; j++) {
+
+    const concretePair = pairStore[i];
+    const middleNumbers = getAllNumbersBetween(
+      concretePair[0],
+      concretePair[1]
+    );
+    ({ blockedIndexes, runningPairList } =
+      findMiddleIndexesAndUpdateRunningPairList(
+        middleNumbers,
+        blockedIndexes,
+        runningPairList,
+        concretePair
+      ));
+
+    pairStore.forEach((pair) => {
       if (
-        !blockedIndexes.includes(pairStore[j][0]) &&
-        !blockedIndexes.includes(pairStore[j][1])
+        !blockedIndexes.includes(pair[0]) &&
+        !blockedIndexes.includes(pair[1])
       ) {
-        const middleNumbers = getAllNumbersBetween(
-          pairStore[j][0],
-          pairStore[j][1]
-        );
-        middleNumbers.forEach((blockingIndex) => {
-          blockedIndexes.push(blockingIndex);
-        });
-        runningPairList.push(pairStore[j]);
+        const middleNumbers = getAllNumbersBetween(pair[0], pair[1]);
+        ({ blockedIndexes, runningPairList } =
+          findMiddleIndexesAndUpdateRunningPairList(
+            middleNumbers,
+            blockedIndexes,
+            runningPairList,
+            pair
+          ));
       }
-    }
+    });
     let currentPairListLength = runningPairList?.length || 0;
     if (currentHighest < currentPairListLength) {
       currentHighest = currentPairListLength;
@@ -55,7 +84,9 @@ function reduceToNonConflictingPairs(pairStore) {
   }
   return highestPairList;
 }
+//#endregion
 
+//#region Main
 const PairWise = () => {
   //#region ugly javascript html text editing, ignore
   var inputString = document.getElementById("pairInput").value;
@@ -67,8 +98,22 @@ const PairWise = () => {
   let pairStore = [];
   for (let i = 0; i < inputString.length - 1; i++) {
     for (let j = 0; j < inputString.length; j++) {
-      pairStore = addPairToStore(inputString, "A", "B", i, j, pairStore);
-      pairStore = addPairToStore(inputString, "X", "Y", i, j, pairStore);
+      pairStore = addPairToStoreWithLeftToRightCoordinates(
+        inputString,
+        "A",
+        "B",
+        i,
+        j,
+        pairStore
+      );
+      pairStore = addPairToStoreWithLeftToRightCoordinates(
+        inputString,
+        "X",
+        "Y",
+        i,
+        j,
+        pairStore
+      );
     }
   }
   let highestPairChain = reduceToNonConflictingPairs(pairStore);
@@ -83,3 +128,4 @@ const PairWise = () => {
   });
   //#endregion
 };
+//#endregion
